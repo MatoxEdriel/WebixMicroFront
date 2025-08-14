@@ -2,3 +2,6 @@
  @plugin "daisyui" {
    themes: light --default, dark --prefersdark;
  }
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
