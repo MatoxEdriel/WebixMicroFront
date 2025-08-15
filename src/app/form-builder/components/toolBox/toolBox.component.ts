@@ -6,6 +6,7 @@ import {
 } from '../../../shared/interfaces/component.interface';
 import { CommonModule } from '@angular/common';
 import { ICON_MAP } from '../../../shared/interfaces/component.interface';
+import { DragService } from '../../services/DragService.service';
 
 declare var webix: any;
 
@@ -24,7 +25,9 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
 
 
 
-  constructor(private _componentService: ComponentService) {}
+  constructor(
+    private _dragService: DragService,
+    private _componentService: ComponentService) {}
 
   ngOnInit() {
 
@@ -137,12 +140,15 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
       `;
     },
     on: {
-      onBeforeDrag: function (context: any, e: any) {
-
-        if (e && e.dataTransfer) {
-          e.dataTransfer.setData('component', JSON.stringify(context.start));
-        }
-        return true; 
+      onBeforeDrag:(context: any, e: any) =>{
+        const component = {
+          id: context.start.id,
+          name: context.start.name,
+          enable: context.start.enable ?? true,
+          view: context.start.view
+        };
+        this._dragService.startDrag(component);
+        return true;
       }
     }
   });

@@ -1,4 +1,5 @@
 import { Component, AfterViewInit } from '@angular/core';
+import { DragService } from '../../services/DragService.service';
 
 @Component({
   selector: 'app-formDesk',
@@ -6,32 +7,42 @@ import { Component, AfterViewInit } from '@angular/core';
   styleUrls: ['./formDesk.component.css'],
 })
 export class FormDeskComponent implements AfterViewInit {
-ngAfterViewInit() {
-  const desk = document.getElementById('desk-container')!;
 
-  desk.addEventListener('dragover', (e) => e.preventDefault());
 
-  desk.addEventListener('drop', (e) => {
-    e.preventDefault();
-    const data = e.dataTransfer?.getData('component');
-    if (data) {
-      const component = JSON.parse(data);
+  constructor(private dragService: DragService) { }
+
+
+
+  ngAfterViewInit() {
+    this.dragService.drag$.subscribe(component => {
       this.addComponentToDesk(component);
-    }
-  });
-}
+    });
 
-addComponentToDesk(component: any) {
-  const deskDiv = document.getElementById('desk-container')!;
-  const wrapper = document.createElement('div');
-  wrapper.className =
-    'mb-2 p-2 bg-white border rounded flex items-center gap-2';
-  wrapper.style.width = 'fit-content';
-  wrapper.style.cursor = 'move';
-  wrapper.innerHTML =
-    component.view.label || component.name || component.view.view;
-  wrapper.setAttribute('draggable', 'true'); // para poder moverlo dentro del desk
-  deskDiv.appendChild(wrapper);
-}
+
+    const desk = document.getElementById('desk-container')!;
+
+    desk.addEventListener('dragover', (e) => e.preventDefault());
+
+
+    
+
+  }
+
+  addComponentToDesk(component: any) {
+    const deskDiv = document.getElementById('desk-container')!;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'mb-2 p-2 bg-white border rounded flex items-center gap-2';
+    wrapper.style.width = 'fit-content';
+    wrapper.style.cursor = 'move';
+    wrapper.innerHTML = component.view.label || component.name || component.view.view;
+    wrapper.setAttribute('draggable', 'true');
+
+    wrapper.addEventListener('dragstart', (event) => {
+      this.dragService.startDrag(component);
+    });
+
+    deskDiv.appendChild(wrapper);
+  }
+
 
 }
