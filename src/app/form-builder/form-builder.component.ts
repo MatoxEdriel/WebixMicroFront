@@ -8,8 +8,7 @@ import { ToolBoxComponent } from './components/toolBox/toolBox.component';
   standalone: true,
   imports: [
     FormDeskComponent,
-    InfoComponentComponent,
-    ToolBoxComponent
+        ToolBoxComponent
   ],
   templateUrl: './form-builder.component.html',
   styleUrls: ['./form-builder.component.css'],

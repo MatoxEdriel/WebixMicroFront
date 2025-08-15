@@ -5,6 +5,7 @@ import {
   IViewConfig,
 } from '../../../shared/interfaces/component.interface';
 import { CommonModule } from '@angular/common';
+import { ICON_MAP } from '../../../shared/interfaces/component.interface';
 
 declare var webix: any;
 
@@ -17,22 +18,68 @@ declare var webix: any;
 })
 export class ToolBoxComponent implements OnInit, AfterViewInit {
   components: IComponent[] = [];
+  iconsComponents = ICON_MAP;
   loading = true;
   errorMessage = '';
 
-  ICON_MAP: Record<string, string> = {
-    text: 'text_fields',
-    textarea: 'text_fields',
-    button: 'smart_button',
-    checkbox: 'check_box',
-    radio: 'radio_button_checked',
-    datepicker: 'calendar_today',
-    select: 'arrow_drop_down_circle',
-  };
+
 
   constructor(private _componentService: ComponentService) {}
 
   ngOnInit() {
+
+
+      this.components = [
+    {
+      id: 1,
+      name: 'Texto',
+      enable: true,
+      view: { view: 'text', placeholder: 'Escribe aquí', width: 150 }
+    },
+    {
+      id: 2,
+      name: 'Botón',
+      enable: true,
+      view: { view: 'button', label: 'Enviar', width: 100 }
+    },
+    {
+      id: 3,
+      name: 'Checkbox',
+      enable: true,
+      view: { view: 'checkbox' }
+    },
+    {
+      id: 4,
+      name: 'Radio',
+      enable: true,
+      view: { view: 'radio' }
+    },
+    {
+      id: 5,
+      name: 'Fecha',
+      enable: true,
+      view: { view: 'datepicker' }
+    },
+    {
+      id: 6,
+      name: 'Área de texto',
+      enable: true,
+      view: { view: 'textarea', placeholder: 'Tu mensaje...', width: 150, height: 50 }
+    },
+    {
+      id: 7,
+      name: 'Select',
+      enable: true,
+      view: { view: 'select' }
+    }
+  ] as (IComponent & { view: IViewConfig })[];
+
+  this.loading = false;
+
+
+
+
+
     this._componentService.getComponents().subscribe({
       next: (res) => {
         this.components = (res.data ?? []).sort((a, b) =>
@@ -63,7 +110,7 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
 
   getIconForComponent(view?: IViewConfig): string {
     if (!view) return 'help_outline';
-    return this.ICON_MAP[view.view] ?? 'help_outline';
+    return this.iconsComponents[view.view] ?? 'help_outline';
   }
 
   renderWebixToolbox() {
@@ -91,11 +138,11 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
     },
     on: {
       onBeforeDrag: function (context: any, e: any) {
-        // Si existe dataTransfer, agregamos los datos del componente
+
         if (e && e.dataTransfer) {
           e.dataTransfer.setData('component', JSON.stringify(context.start));
         }
-        return true; // permite el drag
+        return true; 
       }
     }
   });
