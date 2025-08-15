@@ -1,17 +1,17 @@
 // src/app/shared/services/drag.service.ts
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
-import { IComponent } from '../../shared/interfaces/component.interface';
+import { IComponent, IViewConfig } from '../../shared/interfaces/component.interface';
 
 @Injectable({
-  providedIn: 'root',
+    providedIn: 'root',
 })
 export class DragService {
-  private draggedComponent = new Subject<IComponent>();
-  
-  drag$ = this.draggedComponent.asObservable();
+    private dragSubject = new Subject<IComponent & { view: IViewConfig }>();
+    drag$ = this.dragSubject.asObservable();
 
-  startDrag(component: IComponent) {
-    this.draggedComponent.next(component);
-  }
+    startDrag(component: IComponent & { view: IViewConfig }) {
+        this.dragSubject.next(component);
+    }
+
 }
