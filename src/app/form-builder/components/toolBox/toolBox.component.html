@@ -1,9 +1,58 @@
-<div class="flex flex-col h-full p-3 bg-white">
-  <h3 class="text-lg font-semibold mb-3 text-gray-700">Componentes</h3>
+<div class="flex h-full">
+  <!-- Toolbox -->
+  <div class="flex flex-col w-64 p-3 bg-white border-r border-gray-200">
+    <h3 class="text-lg font-semibold mb-3 text-gray-700">Componentes</h3>
+    <div *ngIf="loading" class="text-sm text-gray-500 italic">Cargando...</div>
+    <div *ngIf="errorMessage" class="text-sm text-red-500 font-medium">{{ errorMessage }}</div>
+    <div id="webix-toolbox" class="flex-1 overflow-y-auto"></div>
+  </div>
 
-  <div *ngIf="loading" class="text-sm text-gray-500 italic">Cargando...</div>
 
-  <div *ngIf="errorMessage" class="text-sm text-red-500 font-medium">{{ errorMessage }}</div>
+  <div class="flex-1 flex relative p-4 bg-gray-50">
 
-  <div id="webix-toolbox" class="flex-1 overflow-y-auto"></div>
+    <div 
+      id="webix-desk" 
+      class="relative flex-1 border-2 border-dashed border-gray-300 rounded-lg bg-white shadow-sm"
+    ></div>
+
+  
+    <ng-lottie
+      id="trash-icon"
+      class="absolute top-2 left-2 w-16 h-16 hidden z-50 cursor-pointer"
+      [options]="trashOptions"
+      (animationCreated)="onTrashAnimationCreated($event)"
+    ></ng-lottie>
+
+
+    <aside 
+      *ngIf="selectedComponent" 
+      class="w-64 p-4 bg-gray-50 border-l border-gray-200 shadow-md ml-4">
+      <h3 class="text-lg font-semibold mb-3">Propiedades</h3>
+
+      <div class="mb-2">
+        <label class="block text-sm font-medium mb-1">Ancho</label>
+        <input 
+          type="number" 
+          [(ngModel)]="selectedComponent.width" 
+          class="w-full border rounded px-2 py-1">
+      </div>
+
+      <div class="mb-2">
+        <label class="block text-sm font-medium mb-1">Alto</label>
+        <input 
+          type="number" 
+          [(ngModel)]="selectedComponent.height" 
+          class="w-full border rounded px-2 py-1">
+      </div>
+
+      <div *ngIf="selectedComponent.label !== undefined" class="mb-2">
+        <label class="block text-sm font-medium mb-1">Label</label>
+        <input 
+          type="text" 
+          [(ngModel)]="selectedComponent.label" 
+          class="w-full border rounded px-2 py-1">
+      </div>
+
+    </aside>
+  </div>
 </div>

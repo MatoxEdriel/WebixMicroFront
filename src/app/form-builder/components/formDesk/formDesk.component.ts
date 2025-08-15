@@ -40,7 +40,6 @@ export class FormDeskComponent implements AfterViewInit {
     wrapper.style.width = 'fit-content';
     wrapper.style.cursor = 'move';
 
-    // Usamos label si existe, sino name, sino el tipo de view
     const label =
       (component.view && component.view.label) ||
       component.name ||
@@ -51,7 +50,6 @@ export class FormDeskComponent implements AfterViewInit {
 
     wrapper.setAttribute('draggable', 'true');
 
-    // Para poder arrastrar componentes dentro del desk
     wrapper.addEventListener('dragstart', (event) => {
       this.dragService.startDrag(component);
     });

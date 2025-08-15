@@ -7,7 +7,7 @@ import { ToolBoxComponent } from './components/toolBox/toolBox.component';
   selector: 'app-form-builder',
   standalone: true,
   imports: [
-    FormDeskComponent,
+
         ToolBoxComponent
   ],
   templateUrl: './form-builder.component.html',

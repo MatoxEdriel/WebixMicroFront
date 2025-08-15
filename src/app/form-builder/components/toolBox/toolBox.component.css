@@ -1,8 +1,18 @@
-/* 
-#toolbox .webix_list_item {
-  border-bottom: none !important;
+#webix-desk.grid-active {
+  background-image:
+    linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
+  background-size: 20px 20px; 
 }
 
-.no-borders .webix_list_item {
-  border-bottom: none !important;
-} */
+
+
+.selected-component {
+  outline: 2px dashed #3B82F6;
+  opacity: 0.8;
+}
+.grid-active {
+  background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
