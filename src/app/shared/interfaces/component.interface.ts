@@ -1,17 +1,17 @@
-export interface IComponent{
-    id:number;
-    name:string;
-    enable:boolean;
+export interface IComponent {
+  id: number;
+  name: string;
+  enable: boolean;
+  view: IViewConfig;
 }
 
-export interface IViewConfig{
-  view: 'text' | 'textarea' | 'button' | 'checkbox' | 'radio' | 'datepicker' | 'select' | string;
+export interface IViewConfig {
+  view: string;
   width?: number;
   height?: number;
-  label?: string;
   placeholder?: string;
+  label?: string;
 }
-
 
 
   export const ICON_MAP: Record<string, string> = {

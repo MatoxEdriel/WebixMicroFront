@@ -1,12 +1,16 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
-import { ComponentService } from '../../services/Component.service';
-import { AnimationOptions, LottieComponent } from 'ngx-lottie';
-import { FormsModule } from '@angular/forms';
 import {
   IComponent,
   IViewConfig,
-  ICON_MAP,
-} from '../../../shared/interfaces/component.interface';
+} from './../../../shared/interfaces/component.interface';
+import {
+  AfterViewInit,
+  Component,
+  OnInit,
+  ElementRef,
+  ViewChild,
+} from '@angular/core';
+import { AnimationOptions, LottieComponent } from 'ngx-lottie';
+import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AnimationService } from '../../services/AnimationService.service';
 import { AnimationItem } from 'lottie-web';
@@ -22,140 +26,140 @@ declare var webix: any;
 })
 export class ToolBoxComponent implements OnInit, AfterViewInit {
   components: IComponent[] = [];
-  iconsComponents = ICON_MAP;
   loading = true;
-  errorMessage = '';
-  private deskItems: HTMLElement[] = [];
-  private trash!: HTMLElement;
-  private trashAnimation!: AnimationItem;
-  private multiDragItems: {
-    el: HTMLElement;
-    startLeft: number;
-    startTop: number;
-  }[] = [];
-
   selectedComponent: IViewConfig | null = null;
+  deskItems: HTMLElement[] = [];
+
+  @ViewChild('trashIcon', { static: false }) trashRef!: ElementRef<HTMLElement>;
+  @ViewChild('trashZone', { static: false })
+  trashZoneRef!: ElementRef<HTMLElement>;
+
+  trash!: HTMLElement;
+  trashZone!: HTMLElement;
+  trashAnimation!: AnimationItem;
+
   trashOptions: AnimationOptions = {
     path: '/assets/lottie/trash.json',
     autoplay: true,
     loop: true,
   };
 
-  constructor(
-    private _AnimationService: AnimationService,
-    private _componentService: ComponentService
-  ) {}
+  MOCK_COMPONENTS: IComponent[] = [
+    {
+      id: 1,
+      name: 'Input de texto',
+      enable: true,
+      view: { view: 'text', width: 150, placeholder: 'Escribe algo...' },
+    },
+    {
+      id: 2,
+      name: 'Botón',
+      enable: true,
+      view: { view: 'button', width: 100, label: 'Enviar' },
+    },
+    {
+      id: 3,
+      name: 'Checkbox',
+      enable: true,
+      view: { view: 'checkbox', label: 'Aceptar términos' },
+    },
+    {
+      id: 4,
+      name: 'Textarea',
+      enable: true,
+      view: {
+        view: 'textarea',
+        width: 200,
+        height: 80,
+        placeholder: 'Comentario...',
+      },
+    },
+    { id: 5, name: 'Datepicker', enable: true, view: { view: 'datepicker' } },
+  ];
 
-  onTrashAnimationCreated(animation: AnimationItem) {
-    this._AnimationService.register('trash', animation);
-  }
+  constructor(private _AnimationService: AnimationService) {}
 
   ngOnInit() {
-    this._componentService.getComponents().subscribe({
-      next: (res) => {
-        this.components = (res.data ?? []).sort((a, b) =>
-          a.name.localeCompare(b.name)
-        );
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage = 'Error cargando componentes';
-        this.loading = false;
-      },
-    });
+    this.components = this.MOCK_COMPONENTS.sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+    this.loading = false;
   }
 
   ngAfterViewInit() {
-    this.trash = document.getElementById('trash-icon')!;
-    const waitWebix = setInterval(() => {
-      if (
-        typeof webix !== 'undefined' &&
-        !this.loading &&
-        this.components.length > 0
-      ) {
-        clearInterval(waitWebix);
-        this.renderWebixToolbox();
-        this.renderWebixDesk();
-      }
-    }, 50);
+    // Inicializamos referencias a elementos del DOM
+    this.trash = this.trashRef?.nativeElement;
+    this.trashZone = this.trashZoneRef?.nativeElement;
+
+    this.renderToolbox();
+    this.renderDesk();
   }
 
-  getIconForComponent(view?: IViewConfig): string {
-    if (!view) return 'help_outline';
-    return this.iconsComponents[view.view] ?? 'help_outline';
+  onTrashAnimationCreated(animation: AnimationItem) {
+    this._AnimationService.register('trash', animation);
+    this.trashAnimation = animation;
   }
 
-  renderWebixToolbox() {
-    webix.ui({
-      container: 'webix-toolbox',
-      view: 'list',
-      borderless: true,
-      select: true,
-      scroll: true,
-      drag: true,
-      data: this.components,
-      type: { height: 50 },
-      template: (obj: any) => {
-        const icon = this.getIconForComponent(obj.view);
-        return `
-          <div style="display:flex; align-items:center; padding:8px 12px; gap:8px;">
-            <div style="width:30px; height:30px;  background-color: #3B82F6;  display:flex; justify-content:center; align-items:center; border-radius:4px;">
-              <span class="material-icons" style="font-size:18px; color:white;">${icon}</span>
-            </div>
-            <div>${this.getHtmlContent(obj)}</div>
-          </div>
-        `;
-      },
+  renderToolbox() {
+    const container = document.getElementById('webix-toolbox');
+    if (!container) return;
+    container.innerHTML = '';
+
+    this.components.forEach((comp) => {
+      const div = document.createElement('div');
+      div.id = `toolbox-comp-${comp.id}`;
+      div.style.marginBottom = '8px';
+      container.appendChild(div);
+
+      webix.ui({ ...comp.view, container: div });
+
+      div.setAttribute('draggable', 'true');
+      div.addEventListener('dragstart', (e: DragEvent) => {
+        e.dataTransfer?.setData('component-id', comp.id.toString());
+      });
     });
   }
 
-  renderWebixDesk() {
-    const deskContainer = document.getElementById('webix-desk')!;
-
-    deskContainer.addEventListener('click', (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!this.deskItems.some((item) => item.contains(target))) {
-        this.selectedComponent = null;
-      }
-    });
-
-
-    
-
-
-
+  renderDesk() {
+    const deskContainer = document.getElementById('webix-desk');
+    if (!deskContainer) return;
     deskContainer.innerHTML = '';
-    this.deskItems = [];
-    webix.DragControl.addDrop(deskContainer, {
-      $drop: (source: any, e: MouseEvent) => {
-        const draggedData = webix
-          .$$(source)
-          ?.getItem(webix.DragControl._drag_context.start);
-        if (!draggedData?.view) return true;
 
-        const rect = deskContainer.getBoundingClientRect();
-        const posX = e.clientX - rect.left;
-        const posY = e.clientY - rect.top;
+    deskContainer.addEventListener('dragover', (e) => e.preventDefault());
+    deskContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const id = e.dataTransfer?.getData('component-id');
+      if (!id) return;
 
-        const wrapper = document.createElement('div');
-        wrapper.style.position = 'absolute';
-        wrapper.style.left = posX + 'px';
-        wrapper.style.top = posY + 'px';
-        wrapper.style.cursor = 'grab';
+      const comp = this.components.find((c) => c.id === +id);
+      if (!comp) return;
 
-        deskContainer.appendChild(wrapper);
-        const webixComp = webix.ui({ ...draggedData.view, container: wrapper });
+      const rect = deskContainer.getBoundingClientRect();
+      const posX = e.clientX - rect.left;
+      const posY = e.clientY - rect.top;
 
-        wrapper.addEventListener('click', () => {
-          this.selectedComponent = draggedData.view;
-        });
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'absolute';
+      wrapper.style.left = posX + 'px';
+      wrapper.style.top = posY + 'px';
+      wrapper.style.cursor = 'grab';
+      wrapper.style.width = comp.view.width ? comp.view.width + 'px' : '150px';
+      wrapper.style.height = comp.view.height
+        ? comp.view.height + 'px'
+        : '40px';
 
-        this.deskItems.push(wrapper);
-        this.makeDraggable(wrapper, deskContainer);
+      deskContainer.appendChild(wrapper);
 
-        return true;
-      },
+      setTimeout(() => {
+        webix.ui({ ...comp.view, container: wrapper });
+      }, 0);
+
+      wrapper.addEventListener('click', () => {
+        this.selectedComponent = comp.view;
+      });
+
+      this.deskItems.push(wrapper);
+      this.makeDraggable(wrapper, deskContainer);
     });
   }
 
@@ -164,94 +168,94 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
       offsetY = 0,
       dragging = false;
 
-    const trash = this.trash;
+    const deskContainer = document.getElementById('webix-desk');
 
     el.addEventListener('mousedown', (e) => {
       dragging = true;
       offsetX = e.offsetX;
       offsetY = e.offsetY;
       el.style.cursor = 'grabbing';
-      if (trash) trash.classList.remove('hidden');
 
-     
-      container.classList.add('grid-active');
+      // Mostrar trashZone si existe
+      if (this.trashZone) {
+        this.trashZone.style.bottom = '4rem';
+        this.trashZone.classList.add('bubble-show');
+      }
+
+      deskContainer?.classList.add('grid-active');
+
+      const onMouseMove = (event: MouseEvent) => {
+        if (!dragging) return;
+
+        const rect = container.getBoundingClientRect();
+        el.style.left =
+          Math.max(
+            0,
+            Math.min(
+              event.clientX - rect.left - offsetX,
+              rect.width - el.offsetWidth
+            )
+          ) + 'px';
+        el.style.top =
+          Math.max(
+            0,
+            Math.min(
+              event.clientY - rect.top - offsetY,
+              rect.height - el.offsetHeight
+            )
+          ) + 'px';
+
+        if (this.trashZone && this.trashRef?.nativeElement) {
+          const trashRect = this.trashZone.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          const overlap = !(
+            elRect.right < trashRect.left ||
+            elRect.left > trashRect.right ||
+            elRect.bottom < trashRect.top ||
+            elRect.top > trashRect.bottom
+          );
+          this.trashRef.nativeElement.style.opacity = overlap ? '1' : '0.5';
+        }
+      };
+
+      const onMouseUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        el.style.cursor = 'grab';
+
+        if (this.trashZone && this.trashRef) {
+          const trashRect = this.trashZone.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          const overlap = !(
+            elRect.right < trashRect.left ||
+            elRect.left > trashRect.right ||
+            elRect.bottom < trashRect.top ||
+            elRect.top > trashRect.bottom
+          );
+
+          if (overlap) {
+            el.remove();
+            this.deskItems = this.deskItems.filter((item) => item !== el);
+            if (this.trashAnimation) {
+              this.trashAnimation.stop();
+              this.trashAnimation.goToAndPlay(0, true);
+            }
+          }
+
+          this.trashZone.classList.remove('bubble-show');
+          this.trashZone.style.bottom = '-100px';
+        }
+
+        deskContainer?.classList.remove('grid-active');
+
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
 
       e.preventDefault();
     });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!dragging) return;
-      const rect = container.getBoundingClientRect();
-      let newLeft = e.clientX - rect.left - offsetX;
-      let newTop = e.clientY - rect.top - offsetY;
-
-      newLeft = Math.max(0, Math.min(newLeft, rect.width - el.offsetWidth));
-      newTop = Math.max(0, Math.min(newTop, rect.height - el.offsetHeight));
-
-      el.style.left = `${newLeft}px`;
-      el.style.top = `${newTop}px`;
-    });
-
-    document.addEventListener('mouseup', (e) => {
-      if (!dragging) return;
-      dragging = false;
-      el.style.cursor = 'grab';
-
-      // Desactivar cuadrícula
-      container.classList.remove('grid-active');
-
-      if (trash) {
-        const trashRect = trash.getBoundingClientRect();
-        const elRect = el.getBoundingClientRect();
-        const overlap = !(
-          elRect.right < trashRect.left ||
-          elRect.left > trashRect.right ||
-          elRect.bottom < trashRect.top ||
-          elRect.top > trashRect.bottom
-        );
-        if (overlap) {
-          el.remove();
-          this.deskItems = this.deskItems.filter((item) => item !== el);
-          if (this.trashAnimation) {
-            this.trashAnimation.stop();
-            this.trashAnimation.goToAndPlay(0, true);
-          }
-        }
-        trash.classList.add('hidden');
-      }
-    });
-  }
-
-  getHtmlContent(obj: { view: IViewConfig }): string {
-    const padding = 8;
-    switch (obj.view.view) {
-      case 'text':
-        return `<input type="text" placeholder="${
-          obj.view.placeholder || ''
-        }" disabled
-          style="width:${
-            obj.view.width || 150
-          }px; text-align:left; padding-left:${padding}px;">`;
-      case 'button':
-        return `<button disabled style="width:${
-          obj.view.width || 100
-        }px; text-align:left; padding-left:${padding}px;">${
-          obj.view.label || 'Button'
-        }</button>`;
-      case 'checkbox':
-        return `<input type="checkbox" disabled style="margin-left:${padding}px;">`;
-      case 'radio':
-        return `<span style="padding-left:${padding}px;">Opción</span>`;
-      case 'datepicker':
-        return `<input type="date" disabled style="text-align:left; padding-left:${padding}px;">`;
-      case 'textarea':
-        return `<textarea disabled style="width:${
-          obj.view.width || 150
-        }px; height:${
-          obj.view.height || 50
-        }px; text-align:left; padding-left:${padding}px;"></textarea>`;
-      default:
-        return `<span style="padding-left:${padding}px;">${obj.view.view}</span>`;
-    }
   }
 }

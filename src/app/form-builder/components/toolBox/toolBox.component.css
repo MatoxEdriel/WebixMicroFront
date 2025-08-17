@@ -1,18 +1,33 @@
-#webix-desk.grid-active {
-  background-image:
-    linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
-  background-size: 20px 20px; 
-}
 
+.grid-active {
+  background-image: 
+    linear-gradient(to right, rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(59, 130, 246, 0.3) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
 
 
 .selected-component {
   outline: 2px dashed #3B82F6;
   opacity: 0.8;
 }
-.grid-active {
-  background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
+
+@keyframes bubbleUp {
+  0% {
+    transform: translateY(50px) scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
+
+.bubble-show {
+  animation: bubbleUp 0.5s ease-out forwards;
+}
+
