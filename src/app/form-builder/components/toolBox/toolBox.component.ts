@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AnimationService } from '../../services/AnimationService.service';
 import { AnimationItem } from 'lottie-web';
+import lottie from 'lottie-web';
 
 declare var webix: any;
 
@@ -29,10 +30,15 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
   loading = true;
   selectedComponent: IViewConfig | null = null;
   deskItems: HTMLElement[] = [];
+  activeTab: string = 'basics';
 
   @ViewChild('trashIcon', { static: false }) trashRef!: ElementRef<HTMLElement>;
   @ViewChild('trashZone', { static: false })
   trashZoneRef!: ElementRef<HTMLElement>;
+  @ViewChild('basicsContainer', { static: true })
+  basicsContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('extrasContainer', { static: true })
+  extrasContainer!: ElementRef<HTMLDivElement>;
 
   trash!: HTMLElement;
   trashZone!: HTMLElement;
@@ -47,21 +53,21 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
   MOCK_COMPONENTS: IComponent[] = [
     {
       id: 1,
-      name: 'Input de texto',
+      name: 'Text Input',
       enable: true,
-      view: { view: 'text', width: 150, placeholder: 'Escribe algo...' },
+      view: { view: 'text', width: 150, placeholder: 'Type here...' },
     },
     {
       id: 2,
-      name: 'Botón',
+      name: 'Button',
       enable: true,
-      view: { view: 'button', width: 100, label: 'Enviar' },
+      view: { view: 'button', width: 100, label: 'Submit' },
     },
     {
       id: 3,
       name: 'Checkbox',
       enable: true,
-      view: { view: 'checkbox', label: 'Aceptar términos' },
+      view: { view: 'checkbox', label: 'Accept terms' },
     },
     {
       id: 4,
@@ -71,13 +77,13 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
         view: 'textarea',
         width: 200,
         height: 80,
-        placeholder: 'Comentario...',
+        placeholder: 'Comment...',
       },
     },
     { id: 5, name: 'Datepicker', enable: true, view: { view: 'datepicker' } },
   ];
 
-  constructor(private _AnimationService: AnimationService) {}
+  constructor(private animationService: AnimationService) {}
 
   ngOnInit() {
     this.components = this.MOCK_COMPONENTS.sort((a, b) =>
@@ -87,37 +93,96 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Inicializamos referencias a elementos del DOM
-    this.trash = this.trashRef?.nativeElement;
-    this.trashZone = this.trashZoneRef?.nativeElement;
+    this.trash = this.trashRef.nativeElement;
+    this.trashZone = this.trashZoneRef.nativeElement;
 
-    this.renderToolbox();
+    this.initializeTab(this.basicsContainer.nativeElement, this.components);
+    this.initializeAdvanced();
     this.renderDesk();
+
+    document.addEventListener('click', (event) => {
+      this.deskItems.forEach((item) => {
+        const btn = item.querySelector('div');
+        if (btn && !item.contains(event.target as Node)) {
+          btn.style.display = 'none';
+        }
+      });
+    });
+  }
+
+  private initializeTab(container: HTMLElement, components: IComponent[]) {
+    if (container.children.length > 0) return;
+
+    components.forEach((comp) => {
+      const div = document.createElement('div');
+      div.style.marginBottom = '8px';
+      container.appendChild(div);
+      webix.ui({ ...comp.view, container: div });
+      div.setAttribute('draggable', 'true');
+      div.addEventListener('dragstart', (e: DragEvent) =>
+        e.dataTransfer?.setData('component-id', comp.id.toString())
+      );
+    });
+  }
+
+  private initializeAdvanced() {
+    const container = document.getElementById('webix-segments');
+    if (!container || container.children.length > 0) return;
+
+    const segments = [
+      {
+        id: 101,
+        name: 'Full Name',
+        view: {
+          view: 'text',
+          label: 'Full Name',
+          placeholder: 'Escribe tu nombre',
+        },
+      },
+      {
+        id: 102,
+        name: 'Email',
+        view: {
+          view: 'text',
+          label: 'Correo',
+          placeholder: 'ejemplo@correo.com',
+        },
+      },
+      {
+        id: 103,
+        name: 'Birthdate',
+        view: { view: 'datepicker', label: 'Fecha de nacimiento' },
+      },
+      {
+        id: 104,
+        name: 'Gender',
+        view: { view: 'radio', label: 'Género', options: ['Male', 'Female'] },
+      },
+    ];
+
+    segments.forEach((seg) => {
+      const div = document.createElement('div');
+      div.id = `segment-${seg.id}`;
+      div.style.marginBottom = '8px';
+      container.appendChild(div);
+      webix.ui({ ...seg.view, container: div });
+
+      this.components.push({
+        id: seg.id,
+        name: seg.name,
+        enable: true,
+        view: seg.view,
+      });
+      div.setAttribute('draggable', 'true');
+      div.addEventListener('dragstart', (e) =>
+        e.dataTransfer?.setData('component-id', seg.id.toString())
+      );
+    });
   }
 
   onTrashAnimationCreated(animation: AnimationItem) {
-    this._AnimationService.register('trash', animation);
+    this.animationService.register('trash', animation);
     this.trashAnimation = animation;
-  }
-
-  renderToolbox() {
-    const container = document.getElementById('webix-toolbox');
-    if (!container) return;
-    container.innerHTML = '';
-
-    this.components.forEach((comp) => {
-      const div = document.createElement('div');
-      div.id = `toolbox-comp-${comp.id}`;
-      div.style.marginBottom = '8px';
-      container.appendChild(div);
-
-      webix.ui({ ...comp.view, container: div });
-
-      div.setAttribute('draggable', 'true');
-      div.addEventListener('dragstart', (e: DragEvent) => {
-        e.dataTransfer?.setData('component-id', comp.id.toString());
-      });
-    });
   }
 
   renderDesk() {
@@ -147,15 +212,43 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
       wrapper.style.height = comp.view.height
         ? comp.view.height + 'px'
         : '40px';
+      wrapper.style.boxSizing = 'border-box';
+
+      // Lottie settings button
+      const configDiv = document.createElement('div');
+      configDiv.style.position = 'absolute';
+      configDiv.style.top = '-10px';
+      configDiv.style.right = '-10px';
+      configDiv.style.width = '30px';
+      configDiv.style.height = '30px';
+      configDiv.style.cursor = 'pointer';
+      configDiv.style.display = 'none';
+      configDiv.style.zIndex = '9999';
+      wrapper.appendChild(configDiv);
+
+      const animation = lottie.loadAnimation({
+        container: configDiv,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: '/assets/lottie/setting.json',
+      });
+      
+      animation.setSpeed(0.2);
 
       deskContainer.appendChild(wrapper);
 
-      setTimeout(() => {
-        webix.ui({ ...comp.view, container: wrapper });
-      }, 0);
+      setTimeout(() => webix.ui({ ...comp.view, container: wrapper }), 0);
 
       wrapper.addEventListener('click', () => {
         this.selectedComponent = comp.view;
+
+        this.deskItems.forEach((item) => {
+          const btn = item.querySelector('div');
+          if (btn) btn.style.display = 'none';
+        });
+
+        configDiv.style.display = 'block';
       });
 
       this.deskItems.push(wrapper);
@@ -167,7 +260,6 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
     let offsetX = 0,
       offsetY = 0,
       dragging = false;
-
     const deskContainer = document.getElementById('webix-desk');
 
     el.addEventListener('mousedown', (e) => {
@@ -176,7 +268,6 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
       offsetY = e.offsetY;
       el.style.cursor = 'grabbing';
 
-      // Mostrar trashZone si existe
       if (this.trashZone) {
         this.trashZone.style.bottom = '4rem';
         this.trashZone.classList.add('bubble-show');
@@ -186,7 +277,6 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
 
       const onMouseMove = (event: MouseEvent) => {
         if (!dragging) return;
-
         const rect = container.getBoundingClientRect();
         el.style.left =
           Math.max(
@@ -219,7 +309,6 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
       };
 
       const onMouseUp = () => {
-        if (!dragging) return;
         dragging = false;
         el.style.cursor = 'grab';
 
@@ -247,14 +336,12 @@ export class ToolBoxComponent implements OnInit, AfterViewInit {
         }
 
         deskContainer?.classList.remove('grid-active');
-
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
       };
 
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
-
       e.preventDefault();
     });
   }
