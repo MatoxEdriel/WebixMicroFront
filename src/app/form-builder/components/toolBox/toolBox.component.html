@@ -1,6 +1,8 @@
 <div class="flex flex-col md:flex-row h-screen gap-4 p-4">
   <!-- Left panel: Tabs -->
-  <div class="w-full md:w-1/6 border border-gray-300 rounded p-2 overflow-auto bg-white shadow-sm">
+  <div
+    class="w-full md:w-1/6 border border-gray-300 rounded p-2 overflow-auto bg-white shadow-sm"
+  >
     <h2 class="font-bold mb-2 text-gray-700 text-lg">Components</h2>
 
     <div class="flex gap-1 mb-2">
@@ -79,6 +81,63 @@
         [options]="trashOptions"
         (animationCreated)="onTrashAnimationCreated($event)"
       ></ng-lottie>
+    </div>
+  </div>
+
+  <!-- Config Panel (Right Side) -->
+  <!-- Config Panel -->
+  <div
+    *ngIf="selectedId !== null"
+    class="fixed right-0 top-0 h-full w-64 bg-white border-l shadow-lg p-4 flex flex-col gap-4 z-50"
+  >
+    <button
+      (click)="closePropertyPanel()"
+      style="
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        border: none;
+        background: none;
+        font-size: 16px;
+        cursor: pointer;
+      "
+    >
+      ✖
+    </button>
+    <h3 class="font-semibold text-lg">Configuración del componente</h3>
+
+    <div>
+      <label class="block text-sm font-medium mb-1">Label</label>
+      <input
+        type="text"
+        class="border rounded px-2 py-1 w-full"
+        [(ngModel)]="componentConfigs[selectedId!].label"
+        (input)="updateLabel()"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1">Alineación del label</label>
+      <select
+        class="border rounded px-2 py-1 w-full"
+        [(ngModel)]="componentConfigs[selectedId!].labelAlign"
+        (change)="updateLabelAlign()"
+      >
+        <option value="left">Left</option>
+        <option value="top">Top</option>
+        <option value="right">Right</option>
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <input
+        type="checkbox"
+        [(ngModel)]="componentConfigs[selectedId!].required"
+        (change)="updateRequired()"
+        id="requiredCheck"
+        class="h-4 w-4"
+      />
+      <label for="requiredCheck" class="text-sm">Required</label>
     </div>
   </div>
 </div>

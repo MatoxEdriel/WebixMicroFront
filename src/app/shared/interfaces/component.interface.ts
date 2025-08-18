@@ -11,6 +11,14 @@ export interface IViewConfig {
   height?: number;
   placeholder?: string;
   label?: string;
+  _webix_ui?: any; // Instancia real de Webix
+}
+
+
+export interface ComponentConfig {
+  label: string;
+  required: boolean;
+  labelAlign: 'left' | 'right' | 'top';
 }
 
 
