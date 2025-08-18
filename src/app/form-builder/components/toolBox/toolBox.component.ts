@@ -17,12 +17,14 @@ import { AnimationService } from '../../services/AnimationService.service';
 import { AnimationItem } from 'lottie-web';
 import lottie from 'lottie-web';
 
+import { MatIconModule } from '@angular/material/icon';
+
 declare var webix: any;
 
 @Component({
   selector: 'app-toolBox',
   standalone: true,
-  imports: [CommonModule, LottieComponent, FormsModule],
+  imports: [CommonModule, LottieComponent, FormsModule, MatIconModule],
   templateUrl: './toolBox.component.html',
   styleUrls: ['./toolBox.component.css'],
 })
